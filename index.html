@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>SWA HandsOn</title>
+  <!-- bootstrap -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <style>
+  [v-cloak] {
+    display: none;
+  }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <nav class="navbar navbar-dark bg-dark">
+      <div class="container">
+        <a class="navbar-brand" href="#">Serverless SPA - DynamoDB</a>
+      </div>
+    </nav>
+    <div class="alert alert-danger" v-show="!!err">
+      <div class="container">{{ err }}</div>
+    </div>
+    <div class="mt-5 container">
+      <div class="row">
+      <div class="col-4">
+        <div class="input-group">
+          <input class="form-control" type="text" v-model="search" placeholder="search..." :disabled="adding">
+        </div>
+      </div>
+      </div>
+      <table class="mt-5 table">
+      <thead>
+        <tr>
+          <th v-for="key in keys">{{ key.name }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="item in displayItems">
+          <td v-for="key in keys">{{ item[key.name] }}</td>
+        </tr>
+        <tr v-show="adding">
+          <td v-for="key in keys">
+            <input class="form-control" v-model="newItem[key.name]" :type="key.type" :placeholder="key.name" :min="key.min">
+          </td>
+        </tr>
+        <tr v-show="!displayItems.length && !adding">
+          <td :colspan="keys.length">No results to display.</td>
+        </tr>
+      </tbody>
+      </table>
+      <button v-show="!adding" class="btn btn-dark" @click="onAddClicked">Add</button>
+      <button v-show="adding" class="btn btn-dark" @click="onSaveClicked" :disabled="invalid">Save</button>
+      <button v-show="adding" class="btn" @click="onCancelClicked">Cancel</button>
+    </div>
+  </div>
+  <!-- bootstrap -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  <!-- axios -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
+  <!-- vue -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+  <!-- config -->
+  <script src="./config.js"></script>
+  <script>
+  // vue
+  new Vue({
+    el: '#app',
+
+    data: {
+      err: '',
+      search: '',
+      items: [],
+      newItem: {},
+      keys: keys,
+      adding: false,
+      invalid: true
+    },
+
+    created: function () {
+        axios.get(url)
+          .then(function (result) {
+            this.items = result.data
+          }.bind(this))
+          .catch(function (err) {
+            this.err = err.message
+          }.bind(this))
+    },
+
+    computed: {
+      displayItems: function () {
+        if (this.search) {
+          return this.items.filter(function (item) {
+            let itemStr = Object.values(item).toString().toLowerCase()
+            if (itemStr.indexOf(this.search.toLowerCase()) !== -1) {
+              return item
+            }
+          }.bind(this))
+        }
+        return this.items
+      }
+    },
+
+    methods: {
+      onAddClicked: function () {
+        this.err = ''
+        this.search = ''
+        this.adding = true
+      },
+
+      onSaveClicked: function () {
+        this.err = ''
+        axios.post(url, this.newItem)
+          .then(function (result) {
+            this.items.push(this.newItem)
+            this.newItem = {}
+          }.bind(this))
+          .catch(function (err) {
+            this.err = err.message
+          }.bind(this))
+        this.adding = false
+      },
+
+      onCancelClicked: function () {
+        this.err = ''
+        this.adding = false
+      }
+    },
+
+    watch: {
+      newItem: {
+        handler: function (obj) {
+          for(let i = 0; i < this.keys.length; i++) {
+            if(!obj[this.keys[i].name]) {
+              this.invalid = true
+              return
+            }
+            this.invalid = false
+          }
+        },
+        deep: true
+      }
+    }
+  })
+  </script>
+</body>
+</html>
