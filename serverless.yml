@@ -8,11 +8,8 @@ provider:
   iamRoleStatements:
   - Effect: Allow
     Action:
-    - dynamodb:Query
     - dynamodb:Scan
-    - dynamodb:GetItem
     - dynamodb:PutItem
-    - dynamodb:UpdateItem
     - dynamodb:DeleteItem
     Resource:
     - !GetAtt StockTable.Arn
@@ -39,16 +36,10 @@ resources:
           -
             AttributeName: id
             AttributeType: S
-          -
-            AttributeName: name
-            AttributeType: S
         KeySchema:
           -
             AttributeName: id
             KeyType: HASH
-          -
-            AttributeName: name
-            KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
