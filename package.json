@@ -5,7 +5,8 @@
   "main": "config.js",
   "dependencies": {},
   "devDependencies": {
-    "http-server": "^0.11.1"
+    "http-server": "^0.11.1",
+    "serverless": "^1.50.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

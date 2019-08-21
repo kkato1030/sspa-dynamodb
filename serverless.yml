@@ -1,0 +1,55 @@
+service: spa-demo
+
+provider:
+  name: aws
+  region: ap-northeast-1
+  runtime: python3.7
+  stage: prd
+  iamRoleStatements:
+  - Effect: Allow
+    Action:
+    - dynamodb:Query
+    - dynamodb:Scan
+    - dynamodb:GetItem
+    - dynamodb:PutItem
+    - dynamodb:UpdateItem
+    - dynamodb:DeleteItem
+    Resource:
+    - !GetAtt StockTable.Arn
+
+functions:
+  spa-demo:
+    handler: handler.main
+    events:
+      - http:
+          method: get
+          path: /
+          cors: true
+      - http:
+          method: post
+          path: /
+          cors: true
+
+resources:
+  Resources:
+    StockTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+          -
+            AttributeName: name
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+          -
+            AttributeName: name
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: StockTable
