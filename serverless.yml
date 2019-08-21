@@ -105,3 +105,7 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: StockTable
+  Outputs:
+    StaticBucketUrl:
+      Description: Web site url.
+      Value: !GetAtt StaticBucket.WebsiteURL
