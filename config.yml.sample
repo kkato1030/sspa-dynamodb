@@ -1,0 +1,5 @@
+global:
+  sourceIp:
+    - 0.0.0.0/32
+s3:
+  bucket_name: sspa-demo

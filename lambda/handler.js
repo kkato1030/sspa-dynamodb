@@ -1,34 +1,34 @@
-import boto3
-import json
+const tableName = process.env.table_name
+
+const AWS = require('aws-sdk')
+const docClient = new AWS.DynamoDB.DocumentClient()
 
 
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('StockTable')
+exports.main = async (event) => {
+  console.info(event)
+  let params = { TableName: tableName }
+  let body
+  if (event.httpMethod == 'GET') {
+    const res = await docClient.scan(params).promise()
+    console.info(res)
+    body = res.Items
+  }
 
+  if (event.httpMethod == 'POST') {
+    params.Item = JSON.parse(event.body)
+    const res = await docClient.put(params).promise()
+    console.info(res)
+    body = { message: 'ok' }
+  }
 
-def main(event=None, context=None):
-    print(event)
+  console.info(body)
 
-    if event['httpMethod'] == 'GET':
-        body = table.scan()['Items']
+  return {
+      statusCode: 200,
+      headers: {
+          'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify(body)
+  }
+}
 
-    if event['httpMethod'] == 'POST':
-        params = json.loads(event['body'])
-        table.put_item(
-            Item=params
-        )
-        body = {
-            'message': 'ok'
-        }
-
-    return {
-        'statusCode': 200,
-        'headers': {
-            "Access-Control-Allow-Origin": "*"
-        },
-        'body': json.dumps(body)
-    }
-
-
-if __name__ == '__main__':
-    main()

@@ -1,22 +1,50 @@
 service: spa-demo
 
+plugins:
+  - serverless-s3-sync
+  - set-api-url
+
 provider:
   name: aws
   region: ap-northeast-1
-  runtime: python3.7
+  runtime: nodejs10.x
   stage: prd
   iamRoleStatements:
-  - Effect: Allow
-    Action:
-    - dynamodb:Scan
-    - dynamodb:PutItem
-    - dynamodb:DeleteItem
-    Resource:
-    - !GetAtt StockTable.Arn
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+        - dynamodb:PutItem
+        - dynamodb:DeleteItem
+      Resource:
+        - !GetAtt StockTable.Arn
+  resourcePolicy:
+    - Effect: Allow
+      Principal: '*'
+      Action: execute-api:Invoke
+      Resource: !Join
+        - ':'
+        - - arn:aws:execute-api
+          - ${self:provider.region}
+          - !Ref AWS::AccountId
+          - '*'
+
+      Condition:
+        IpAddress:
+          aws:SourceIp: ${self:custom.config.global.sourceIp}
+
+package:
+  exclude:
+    - '*'
+    - '*/**'
+  include:
+    - lambda/handler.js
 
 functions:
   spa-demo:
-    handler: handler.main
+    name: sspa-demo-${self:provider.stage}
+    handler: lambda/handler.main
+    environment:
+      table_name: !Ref StockTable
     events:
       - http:
           method: get
@@ -27,8 +55,37 @@ functions:
           path: /
           cors: true
 
+custom:
+  s3Sync:
+    - bucketName: ${self:custom.config.s3.bucket_name}
+      localDir: static
+  config: ${file(./config.yml)}
+
 resources:
   Resources:
+    StaticBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.config.s3.bucket_name}
+        WebsiteConfiguration:
+          IndexDocument: index.html
+    StaticBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref StaticBucket
+        PolicyDocument:
+           Statement:
+             Effect: Allow
+             Principal: '*'
+             Action: s3:GetObject
+             Resource: !Join
+                 - ''
+                 - - 'arn:aws:s3:::'
+                   - !Ref StaticBucket
+                   - '/*'
+             Condition:
+               IpAddress:
+                  aws:SourceIp: ${self:custom.config.global.sourceIp}
     StockTable:
       Type: 'AWS::DynamoDB::Table'
       Properties:
