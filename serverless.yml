@@ -1,14 +1,15 @@
 service: spa-demo
 
 plugins:
+  - serverless-hooks-plugin
   - serverless-s3-sync
-  - set-api-url
 
 provider:
   name: aws
   region: ap-northeast-1
   runtime: nodejs10.x
   stage: prd
+  stackName: ${self:service}-${self:provider.stage}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -59,6 +60,9 @@ custom:
   s3Sync:
     - bucketName: ${self:custom.config.s3.bucket_name}
       localDir: static
+  hooks:
+    after:deploy:deploy:
+      - node deploy/setApiUrl.js ${self:provider.stackName}
   config: ${file(./config.yml)}
 
 resources:
