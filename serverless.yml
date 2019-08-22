@@ -28,7 +28,6 @@ provider:
           - ${self:provider.region}
           - !Ref AWS::AccountId
           - '*'
-
       Condition:
         IpAddress:
           aws:SourceIp: ${self:custom.config.global.sourceIp}
@@ -53,6 +52,10 @@ functions:
           cors: true
       - http:
           method: post
+          path: /
+          cors: true
+      - http:
+          method: delete
           path: /
           cors: true
 

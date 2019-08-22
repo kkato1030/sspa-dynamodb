@@ -21,6 +21,13 @@ exports.main = async (event) => {
     body = { message: 'ok' }
   }
 
+  if (event.httpMethod == 'DELETE') {
+    params.Key = JSON.parse(event.body)
+    const res = await docClient.delete(params).promise()
+    console.info(res)
+    body = { message: 'ok' }
+  }
+
   console.info(body)
 
   return {

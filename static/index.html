@@ -33,11 +33,17 @@
       <thead>
         <tr>
           <th v-for="key in keys">{{ key.name }}</th>
+          <td width="20"></td>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in displayItems">
+        <tr v-for="(item, index) in displayItems">
           <td v-for="key in keys">{{ item[key.name] }}</td>
+          <td>
+            <button type="button" class="close" aria-label="Delete" @click="onDeleteClicked(index)">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </td>
         </tr>
         <tr v-show="adding">
           <td v-for="key in keys">
@@ -128,6 +134,24 @@
             this.err = err.message
           }.bind(this))
         this.adding = false
+      },
+
+      onDeleteClicked: function (index) {
+        this.err = ''
+        item = this.items[parseInt(index)]
+        let res = confirm(item.name + 'を削除しますか?')
+        const params = {
+          id: item.id
+        }
+        if (res) {
+          axios.delete(url, { data: params })
+            .then(function (result) {
+              this.items.splice(index, 1)
+            }.bind(this))
+            .catch(function (err) {
+              this.err = err.message
+            }.bind(this))
+        }
       },
 
       onCancelClicked: function () {
