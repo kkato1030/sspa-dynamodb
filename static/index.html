@@ -33,11 +33,11 @@
       <thead>
         <tr>
           <th v-for="key in keys">{{ key.name }}</th>
-          <td width="20"></td>
+          <th width="20"></td>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(item, index) in displayItems">
+        <tr v-for="(item, index) in displayItems" v-show="!loading">
           <td v-for="key in keys">{{ item[key.name] }}</td>
           <td>
             <button type="button" class="close" aria-label="Delete" @click="onDeleteClicked(index)">
@@ -50,8 +50,15 @@
             <input class="form-control" v-model="newItem[key.name]" :type="key.type" :placeholder="key.name" :min="key.min">
           </td>
         </tr>
-        <tr v-show="!displayItems.length && !adding">
-          <td :colspan="keys.length">No results to display.</td>
+        <tr v-if="!displayItems.length && !adding && !loading">
+          <td :colspan="keys.length + 1">No results to display.</td>
+        </tr>
+        <tr v-if="loading">
+          <td :colspan="keys.length + 1">
+            <div class="spinner-border" role="status">
+              <span class="sr-only">Loading...</span>
+            </div>
+          </td>
         </tr>
       </tbody>
       </table>
@@ -84,6 +91,7 @@
       newItem: {},
       keys: keys,
       adding: false,
+      loading: true,
       invalid: true
     },
 
@@ -93,6 +101,9 @@
           this.items = result.data.sort(function (a, b) {
             return parseInt(a.id) - parseInt(b.id)
           })
+          setTimeout(function () {
+            this.loading = false
+          }.bind(this), 500)
         }.bind(this))
         .catch(function (err) {
           this.err = err.message
