@@ -82,13 +82,15 @@
     },
 
     created: function () {
-        axios.get(url)
-          .then(function (result) {
-            this.items = result.data
-          }.bind(this))
-          .catch(function (err) {
-            this.err = err.message
-          }.bind(this))
+      axios.get(url)
+        .then(function (result) {
+          this.items = result.data.sort(function (a, b) {
+            return parseInt(a.id) - parseInt(b.id)
+          })
+        }.bind(this))
+        .catch(function (err) {
+          this.err = err.message
+        }.bind(this))
     },
 
     computed: {
@@ -110,6 +112,9 @@
         this.err = ''
         this.search = ''
         this.adding = true
+        // id auto fill
+        nextId = parseInt(this.items.slice(-1)[0].id) + 1
+        this.newItem.id = nextId.toString()
       },
 
       onSaveClicked: function () {
